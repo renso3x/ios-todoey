@@ -12,8 +12,14 @@ class TodoListTableVC: UITableViewController {
 
     var itemsArray = ["Do laundry", "Bank Deposit", "Go SMPW"]
     
+    var defaults = UserDefaults.standard
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let items = defaults.value(forKey: "TodoListArray") as? [String] {
+            itemsArray = items
+        }
     }
     
     //MARK - TableViewDataSource Methods
@@ -34,8 +40,6 @@ class TodoListTableVC: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         // this will show a grey when deselecting a row
-        
-        
         if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
             tableView.cellForRow(at: indexPath)?.accessoryType = .none
         } else {
@@ -56,6 +60,9 @@ class TodoListTableVC: UITableViewController {
             (alertItem) in
             
             self.itemsArray.append(textField.text!)
+            
+            self.defaults.set(self.itemsArray, forKey: "TodoListArray")
+            
             self.tableView.reloadData()
         }
         
