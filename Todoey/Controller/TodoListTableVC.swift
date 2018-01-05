@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class TodoListTableVC: UITableViewController {
+class TodoListTableVC: SwipeTableViewController {
     
     let realm = try! Realm()
     var todoItems: Results<Item>?
@@ -32,7 +32,7 @@ class TodoListTableVC: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
             
         if let item = todoItems?[indexPath.row] {
             cell.textLabel?.text = item.title
@@ -47,11 +47,9 @@ class TodoListTableVC: UITableViewController {
     //MARK: - TableViewDelegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
         if let item = todoItems?[indexPath.row] {
             do {
                 try realm.write {
-//                    realm.delete(item) delete item
                     item.isChecked = !item.isChecked
                 }
             } catch {
@@ -99,6 +97,19 @@ class TodoListTableVC: UITableViewController {
     func loadItems() {
         todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
+    }
+    
+    //MARK: - Update Data Model
+    override func updateModel(at indexPath: IndexPath) {
+        if let item = todoItems?[indexPath.row]  {
+            do {
+                try realm.write {
+                    realm.delete(item)
+                }
+            } catch {
+                print ("Error in deleting item, \(error)")
+            }
+        }
     }
 }
 
