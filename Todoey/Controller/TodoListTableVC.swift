@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class TodoListTableVC: SwipeTableViewController {
     
@@ -19,10 +20,38 @@ class TodoListTableVC: SwipeTableViewController {
         }
     }
     
+    @IBOutlet weak var searchBar: UISearchBar!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         print (FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        title = selectedCategory?.name
+        guard let hexColour = selectedCategory?.colour else { fatalError()}
+        updateNavBar(with: hexColour)
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+    
+        updateNavBar(with: "FF8170")
+    }
+    
+    //MARK: - Nav Bar update tint color
+    func updateNavBar(with hexColour: String) {
+        guard let navBar = navigationController?.navigationBar else { fatalError() }
+        
+        guard let navBarColour = UIColor(hexString: hexColour) else { fatalError() }
+        
+        navBar.barTintColor = navBarColour
+        
+        navBar.tintColor = ContrastColorOf(navBarColour, returnFlat: true)
+        
+        navBar.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor: ContrastColorOf(navBarColour, returnFlat: true)]
+        
+        
+        searchBar.backgroundColor = navBarColour
     }
     
     //MARK - TableViewDataSource Methods
@@ -37,6 +66,11 @@ class TodoListTableVC: SwipeTableViewController {
         if let item = todoItems?[indexPath.row] {
             cell.textLabel?.text = item.title
             cell.accessoryType = item.isChecked == true ? .checkmark : .none
+            
+            if let colour = UIColor(hexString: selectedCategory!.colour)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems!.count)) {
+                cell.backgroundColor = colour
+                cell.textLabel?.textColor = ContrastColorOf(colour, returnFlat: true)
+            }
         } else {
             cell.textLabel?.text = "No Items Added"
         }
@@ -75,7 +109,6 @@ class TodoListTableVC: SwipeTableViewController {
                         let item = Item()
                         item.title = textField.text!
                         currentCategory.items.append(item)
-                        
                     }
                 } catch {
                     print ("Error in adding items, \(error)")

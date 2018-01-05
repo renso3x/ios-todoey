@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryTableViewController: SwipeTableViewController {
     
@@ -20,6 +21,13 @@ class CategoryTableViewController: SwipeTableViewController {
         
         loadData()
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        guard let navBar = navigationController?.navigationBar else { fatalError()}
+        
+        navBar.tintColor = FlatWhite()
+        navBar.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor: FlatWhite()]
+    }
 
     //MARK: - Table DataSource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -28,9 +36,13 @@ class CategoryTableViewController: SwipeTableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-            
+        
+        guard let hexColour = UIColor(hexString: (categories?[indexPath.row].colour)!) else { fatalError()}
+        
         cell.textLabel?.text = categories?[indexPath.row].name
-
+        cell.backgroundColor = hexColour
+        cell.textLabel?.textColor = ContrastColorOf(hexColour, returnFlat: true)
+        
         return cell
     }
     
@@ -45,6 +57,7 @@ class CategoryTableViewController: SwipeTableViewController {
             
             let category = Category()
             category.name = textField.text!
+            category.colour = UIColor.randomFlat.hexValue()
             
             self.save(category: category)
         }
@@ -95,6 +108,7 @@ class CategoryTableViewController: SwipeTableViewController {
     //MARK: - Table Delegate Methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: "goToItem", sender: self)
+        tableView.deselectRow(at: indexPath, animated: true)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -103,7 +117,6 @@ class CategoryTableViewController: SwipeTableViewController {
             
             if let indexPath = tableView.indexPathForSelectedRow {
                 destinationVC.selectedCategory = categories?[indexPath.row]
-                destinationVC.navigationItem.title = categories?[indexPath.row].name
             }
            
         }
